@@ -8,8 +8,9 @@ using namespace std;
 #define WIDTH 20
 #define HEIGHT 10
 #define OFFSET (4 - ((WIDTH * 3) % 4))
-void bezierPoint(float points[], int size, float t, float t0, float t1, char* pixelArray);
 #define CTRL_POINTS 5
+
+void bezierPoint(float points[CTRL_POINTS], int size, float t, float t0, float t1, char* pixelArray);
 
 void drawbmp(char * filename, char* pixelArray)
 {
@@ -91,7 +92,7 @@ void drawbmp(char * filename, char* pixelArray)
 		for (x = 0; x <= WIDTH - 1; x++)
 		{
 
-			red = pixelArray[(y*(3*WIDTH +OFFSET))+3*WIDTH] ;
+			red = pixelArray[(y*(3 * WIDTH + OFFSET)) + 3 * WIDTH];
 			green = 0;
 			blue = 0;
 			if (red > 255) red = 255; if (red < 0) red = 0;
@@ -119,15 +120,15 @@ void drawbmp(char * filename, char* pixelArray)
 
 struct Point
 {
-	
+
 };
 int main()
 {
 
 	//de casteljeau for 5 points
 	//for one coordinate
-	float points[CTRL_POINTS] = { 1.0f, 2.f, 3.f, 4.f, 5};
-	char* pixelArray = new char[(WIDTH+OFFSET)*HEIGHT * 3]; //alloc 3 bytes per pixel
+	float points[CTRL_POINTS] = { 1.0f, 2.f, 3.f, 4.f, 5 };
+	char* pixelArray = new char[(WIDTH + OFFSET)*HEIGHT * 3]; //alloc 3 bytes per pixel
 
 	for (float t = 0.1f; t < 1.f; t += 0.1f)
 	{
@@ -143,9 +144,6 @@ int main()
 }
 
 
-
-
-
 void bezierPoint(float points[CTRL_POINTS], int size, float t, float t0, float t1, char* pixelArray)
 {
 	float u = (t - t0) / (t1 - t0);	//normalized progress
@@ -154,7 +152,7 @@ void bezierPoint(float points[CTRL_POINTS], int size, float t, float t0, float t
 
 		for (int i = 1; i < size; i++)
 		{
-			points[i - 1] = u*points[i] + (1 - u)*points[i-1];
+			points[i - 1] = u*points[i] + (1 - u)*points[i - 1];
 		}
 
 		for (int k = 0; k < size; k++)
@@ -165,5 +163,5 @@ void bezierPoint(float points[CTRL_POINTS], int size, float t, float t0, float t
 	std::cout << endl;
 	float x = points[0];
 
-	pixelArray[5*(3*(WIDTH)+OFFSET)+(int)x*3+6] = 100;
+	pixelArray[5 * (3 * (WIDTH)+OFFSET) + (int)x * 3 + 6] = 100;
 }
