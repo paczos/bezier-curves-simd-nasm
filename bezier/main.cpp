@@ -127,9 +127,9 @@ int main()
 	//de casteljeau for 5 points
 	//for one coordinate
 	float points[CTRL_POINTS] = { 1.0f, 2.f, 3.f, 4.f, 5};
-	char* pixelArray = new char[WIDTH*HEIGHT * 3]; //alloc 3 bytes per pixel
+	char* pixelArray = new char[(WIDTH+OFFSET)*HEIGHT * 3]; //alloc 3 bytes per pixel
 
-	for (float t = 0.0f; t < 1.f; t += 0.1f)
+	for (float t = 0.1f; t < 1.f; t += 0.1f)
 	{
 		float cpoints[CTRL_POINTS];
 		memcpy(cpoints, points, sizeof(float) * CTRL_POINTS);
@@ -151,17 +151,19 @@ void bezierPoint(float points[CTRL_POINTS], int size, float t, float t0, float t
 	float u = (t - t0) / (t1 - t0);	//normalized progress
 	for (int j = 1; j < size; j++)
 	{
-		for (int i = j; i < size; i++)
+
+		for (int i = 1; i < size; i++)
 		{
-			points[i - j] = (1 - u)*points[i - 1] + u*points[i];
+			points[i - 1] = u*points[i] + (1 - u)*points[i-1];
 		}
+
 		for (int k = 0; k < size; k++)
 		{
 			std::cout << points[k] << "\t";
 		}
 	}
 	std::cout << endl;
-	float x = points[size - 2];
+	float x = points[0];
 
-	pixelArray[2*(3*(WIDTH))+(int)x*3] = 100;
+	pixelArray[5*(3*(WIDTH)+OFFSET)+(int)x*3+6] = 100;
 }
