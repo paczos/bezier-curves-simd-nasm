@@ -5,14 +5,20 @@
 #include <iostream>
 using namespace std;
 #define _CRT_SECURE_NO_WARNINGS
-#define WIDTH 20
-#define HEIGHT 10
+#define WIDTH 900
+#define HEIGHT 700
 #define OFFSET (4 - ((WIDTH * 3) % 4))
+//#define DEBUG
 #define CTRL_POINTS 5
 
-void bezierPoint(float points[CTRL_POINTS], int size, float t, float t0, float t1, char* pixelArray);
+struct Point
+{
+	float x, y;
+};
+void controlPoints(Point* points, int size, unsigned char* pixelArray);
+void bezierPoint(Point* points, int size, float t, float t0, float t1, unsigned char* pixelArray);
 
-void drawbmp(char * filename, char* pixelArray)
+void drawbmp(char * filename, unsigned char* pixelArray)
 {
 	// header code taken from https://en.wikipedia.org/wiki/User:Evercat/Buddhabrot.c
 	unsigned int headers[13];
@@ -92,7 +98,7 @@ void drawbmp(char * filename, char* pixelArray)
 		for (x = 0; x <= WIDTH - 1; x++)
 		{
 
-			red = pixelArray[(y*(3 * WIDTH + OFFSET)) + 3 * WIDTH];
+			red = pixelArray[(y*(3 * WIDTH + OFFSET)) + x];
 			green = 0;
 			blue = 0;
 			if (red > 255) red = 255; if (red < 0) red = 0;
@@ -118,50 +124,61 @@ void drawbmp(char * filename, char* pixelArray)
 	return;
 }
 
-struct Point
-{
-
-};
 int main()
 {
-
 	//de casteljeau for 5 points
 	//for one coordinate
-	float points[CTRL_POINTS] = { 1.0f, 2.f, 3.f, 4.f, 5 };
-	char* pixelArray = new char[(WIDTH + OFFSET)*HEIGHT * 3]; //alloc 3 bytes per pixel
+	Point points[CTRL_POINTS] = {
+		Point{0.0f, 0.0},
+		Point{ 0.0f, 600.0 },
+		Point{ 300.f, 600.0},
+		Point{500.f, 10}, 
+		Point{ 800, 600}
+	};
+	unsigned char* pixelArray = new unsigned char[(WIDTH*3 + OFFSET)*HEIGHT]; //alloc 3 bytes per pixel
+	std::fill_n(pixelArray, (WIDTH * 3 + OFFSET)*HEIGHT, 0);
 
-	for (float t = 0.1f; t < 1.f; t += 0.1f)
+
+	for (float t = 0.0f; t < 1.f; t += 0.001f)
 	{
-		float cpoints[CTRL_POINTS];
-		memcpy(cpoints, points, sizeof(float) * CTRL_POINTS);
+		Point cpoints[CTRL_POINTS];
+		memcpy(cpoints, points, sizeof(Point) * CTRL_POINTS);
 		bezierPoint(cpoints, CTRL_POINTS, t, 0, 1, pixelArray);
 
 	}
+#ifdef DEBUG
+	controlPoints(points, CTRL_POINTS, pixelArray);
+#endif
+
 	drawbmp("test.bmp", pixelArray);
 	delete pixelArray;
 
 	return 0;
 }
 
+void controlPoints(Point* points, int size, unsigned char* pixelArray)
+{
+	for (int i = 0; i < size; i++)
+	{
 
-void bezierPoint(float points[CTRL_POINTS], int size, float t, float t0, float t1, char* pixelArray)
+	pixelArray[(int)points[i].y*(3 * WIDTH + OFFSET) + (int)points[i].x] = 250;
+	}
+
+}
+void bezierPoint(Point* points, int size, float t, float t0, float t1, unsigned char* pixelArray)
 {
 	float u = (t - t0) / (t1 - t0);	//normalized progress
 	for (int j = 1; j < size; j++)
 	{
-
 		for (int i = 1; i < size; i++)
 		{
-			points[i - 1] = u*points[i] + (1 - u)*points[i - 1];
-		}
-
-		for (int k = 0; k < size; k++)
-		{
-			std::cout << points[k] << "\t";
+			points[i - 1].x = u*points[i].x + (1 - u)*points[i - 1].x;
+			points[i - 1].y = u*points[i].y + (1 - u)*points[i - 1].y;
 		}
 	}
 	std::cout << endl;
-	float x = points[0];
+	float  x = points[0].x;
+	float  y = points[0].y;
 
-	pixelArray[5 * (3 * (WIDTH)+OFFSET) + (int)x * 3 + 6] = 100;
+	pixelArray[(int)y*(3*WIDTH + OFFSET) + (int)x] = 250;
 }
