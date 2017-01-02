@@ -4,11 +4,10 @@
 #include <cstring>
 #include <iostream>
 using namespace std;
-#define _CRT_SECURE_NO_WARNINGS
 #define WIDTH 900
 #define HEIGHT 700
 #define OFFSET (4 - ((WIDTH * 3) % 4))
-//#define DEBUG
+#define DEBUG
 #define CTRL_POINTS 5
 
 struct Point
@@ -132,11 +131,11 @@ int main()
 		Point{0.0f, 0.0},
 		Point{ 0.0f, 600.0 },
 		Point{ 300.f, 600.0},
-		Point{500.f, 10}, 
+		Point{500.f, 10},
 		Point{ 800, 600}
 	};
-	unsigned char* pixelArray = new unsigned char[(WIDTH*3 + OFFSET)*HEIGHT]; //alloc 3 bytes per pixel
-	std::fill_n(pixelArray, (WIDTH * 3 + OFFSET)*HEIGHT, 0);
+	unsigned char* pixelArray = new unsigned char[(WIDTH * 3 + OFFSET)*HEIGHT]; //alloc 3 bytes per pixel
+	fill_n(pixelArray, (WIDTH * 3 + OFFSET)*HEIGHT, 0);
 
 
 	for (float t = 0.0f; t < 1.f; t += 0.001f)
@@ -161,7 +160,7 @@ void controlPoints(Point* points, int size, unsigned char* pixelArray)
 	for (int i = 0; i < size; i++)
 	{
 
-	pixelArray[(int)points[i].y*(3 * WIDTH + OFFSET) + (int)points[i].x] = 250;
+		pixelArray[(int)points[i].y*(3 * WIDTH + OFFSET) + (int)points[i].x] = 250;
 	}
 
 }
@@ -180,5 +179,5 @@ void bezierPoint(Point* points, int size, float t, float t0, float t1, unsigned 
 	float  x = points[0].x;
 	float  y = points[0].y;
 
-	pixelArray[(int)y*(3*WIDTH + OFFSET) + (int)x] = 250;
+	pixelArray[(int)y*(3 * WIDTH + OFFSET) + (int)x] = 250;
 }
