@@ -3,23 +3,17 @@
 #include <math.h>
 #include <cstring>
 #include <iostream>
+#include "emmintrin.h"
 using namespace std;
-#define WIDTH 900
-#define HEIGHT 700
+#define WIDTH 400
+#define HEIGHT 305
 #define OFFSET (4 - ((WIDTH * 3) % 4))
 #define DEBUG
-#define CTRL_POINTS 5
-
-struct Point
-{
-	float x, y;
-};
-void controlPoints(Point* points, int size, unsigned char* pixelArray);
-void bezierPoint(Point* points, int size, float t, float t0, float t1, unsigned char* pixelArray);
+#define CTRL_POINTS 4
 
 void drawbmp(char * filename, unsigned char* pixelArray)
 {
-	// header code taken from https://en.wikipedia.org/wiki/User:Evercat/Buddhabrot.c
+	// inspired by https://en.wikipedia.org/wiki/User:Evercat/Buddhabrot.c
 	unsigned int headers[13];
 	FILE * outfile;
 	int extrabytes;
@@ -123,30 +117,55 @@ void drawbmp(char * filename, unsigned char* pixelArray)
 	return;
 }
 
+//https://en.wikipedia.org/wiki/BMP_file_format#Bitmap_file_header
+
 int main()
 {
-	//de casteljeau for 5 points
-	//for one coordinate
-	Point points[CTRL_POINTS] = {
-		Point{0.0f, 0.0},
-		Point{ 0.0f, 600.0 },
-		Point{ 300.f, 600.0},
-		Point{500.f, 10},
-		Point{ 800, 600}
-	};
+	//de casteljeau for CTRL_POINTS points
+	float* pointsX = new float[CTRL_POINTS] { 0.0f, 300.0f, 0.f, 300.f};//, 800.f, 800.f, 800.f, 800.f};
+	float* pointsY = new float[CTRL_POINTS] { 0.2f, 0.0f, 300.0f, 300.f};//, 600, 600.f, 600.f, 600.f
 	unsigned char* pixelArray = new unsigned char[(WIDTH * 3 + OFFSET)*HEIGHT]; //alloc 3 bytes per pixel
 	fill_n(pixelArray, (WIDTH * 3 + OFFSET)*HEIGHT, 0);
 
-
+	const float t0 = 0;
+	const float t1 = 1;
 	for (float t = 0.0f; t < 1.f; t += 0.001f)
 	{
-		Point cpoints[CTRL_POINTS];
-		memcpy(cpoints, points, sizeof(Point) * CTRL_POINTS);
-		bezierPoint(cpoints, CTRL_POINTS, t, 0, 1, pixelArray);
+		__m128 x1 = _mm_load_ps(pointsX);
+		__m128 y1 = _mm_load_ps(pointsY);
 
+		const float u = (t - t0) / (t1 - t0);	//normalized progress
+		__m128 uv = _mm_set1_ps(u);
+		__m128 uv1 = _mm_set1_ps(1-u);
+
+		for (int j = 1; j < CTRL_POINTS; j++)
+		{
+			__m128 x1u = _mm_mul_ps(x1, uv); //u*cpointsX[i]
+			__m128 x1u1 = _mm_mul_ps(x1, uv1);
+			 //shift x1u1 by one float to the left (1-U)
+			__m128 x1u1s = _mm_cvtepi32_ps(_mm_srli_si128(_mm_cvtps_epi32(x1u), 4));//convert float to int, shift, convert back
+			x1 = _mm_add_ps(x1u1, x1u1s);
+
+			//same for ys
+			__m128 y1u = _mm_mul_ps(y1, uv); //u*cpointsX[i]
+			__m128 y1u1 = _mm_mul_ps(y1, uv1);
+			//shift y1u1 by one float to the left (1-U)
+			__m128 y1u1s = _mm_cvtepi32_ps(_mm_srli_si128(_mm_cvtps_epi32(y1u), 4));//convert float to int, shift, convert back
+			y1 = _mm_add_ps(y1u1, y1u1s);
+		}
+
+		float  x, y;
+		_MM_EXTRACT_FLOAT(x, x1, 0);
+		_MM_EXTRACT_FLOAT(y, y1, 0);
+
+		pixelArray[(int)y*(3 * WIDTH + OFFSET) + (int)x] = 250;
 	}
 #ifdef DEBUG
-	controlPoints(points, CTRL_POINTS, pixelArray);
+	for (int i = 0; i < CTRL_POINTS; i++)
+	{
+		pixelArray[(int)pointsY[i] * (3 * WIDTH + OFFSET) + (int)pointsX[i]] = 250;
+	}
+
 #endif
 
 	drawbmp("test.bmp", pixelArray);
@@ -155,29 +174,3 @@ int main()
 	return 0;
 }
 
-void controlPoints(Point* points, int size, unsigned char* pixelArray)
-{
-	for (int i = 0; i < size; i++)
-	{
-
-		pixelArray[(int)points[i].y*(3 * WIDTH + OFFSET) + (int)points[i].x] = 250;
-	}
-
-}
-void bezierPoint(Point* points, int size, float t, float t0, float t1, unsigned char* pixelArray)
-{
-	float u = (t - t0) / (t1 - t0);	//normalized progress
-	for (int j = 1; j < size; j++)
-	{
-		for (int i = 1; i < size; i++)
-		{
-			points[i - 1].x = u*points[i].x + (1 - u)*points[i - 1].x;
-			points[i - 1].y = u*points[i].y + (1 - u)*points[i - 1].y;
-		}
-	}
-	std::cout << endl;
-	float  x = points[0].x;
-	float  y = points[0].y;
-
-	pixelArray[(int)y*(3 * WIDTH + OFFSET) + (int)x] = 250;
-}
