@@ -131,8 +131,9 @@ int main()
 
 	const float t0 = 0;
 	const float t1 = 1;
+	
 #pragma region  toasm
-	cout<<"size of pointer"<<sizeof(int*)<<endl;
+//	cout<<"size of pointer"<<sizeof(int*)<<endl;
 	cout<<func(pointsX, pointsY, pixelArray, WIDTH, HEIGHT)<<endl;
 	//params: float* pointsX, float* pointsY, unsigned char* pixelArray, width, height 
 	/*for (float t = 0.0f; t < 1.f; t += 0.01f)
@@ -140,7 +141,8 @@ int main()
 		__m128 x1 = _mm_load_ps(pointsX);
 		__m128 y1 = _mm_load_ps(pointsY);
 
-		const float u = (t - t0) / (t1 - t0);	//normalized progress
+
+const float u = (t - t0) / (t1 - t0);	//normalized progress
 		__m128 uv = _mm_set1_ps(u);
 		__m128 uv1 = _mm_set1_ps(1-u);
 
