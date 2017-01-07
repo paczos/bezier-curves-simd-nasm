@@ -12,8 +12,8 @@ section .data
 	step_start: dq 0.0
 	step_end: dq 1.0
 	step: dq 0.01
-	u: dq 0.0, 0.0, 0.0, 0.0
-	u1: dq 0, 0, 0, 0
+	u: dq 0, 0, 0, 0 ; aligned
+	u1: dq 0, 0, 0, 0	;aligned
 
 section .bss
 	inter_iter: resq 1
@@ -57,7 +57,8 @@ load1:;loading works
 	mov dword [u+8], ebx
 	mov dword [u+12], ebx
 	movups xmm2, [u]
-	mov eax, ebx;
+;	mov eax, ebx;
+
 load2:;loading works
 	;prepare u1
 	sub ebx, 1	;u-1
