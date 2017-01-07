@@ -1,9 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include "stdio.h"
 #include <math.h>
 #include <cstring>
 #include <iostream>
-#include "emmintrin.h"
+
 using namespace std;
 #define WIDTH 400
 #define HEIGHT 305
@@ -11,9 +10,12 @@ using namespace std;
 #define DEBUG
 #define CTRL_POINTS 4
 
-void drawbmp(char * filename, unsigned char* pixelArray)
+extern "C" int func(float* pointsX, float* pointsY, unsigned char* pixelArray, int width, int height);
+
+void drawbmp(string  filename, unsigned char* pixelArray)
 {
 	// inspired by https://en.wikipedia.org/wiki/User:Evercat/Buddhabrot.c
+	// https://en.wikipedia.org/wiki/BMP_file_format#Bitmap_file_header
 	unsigned int headers[13];
 	FILE * outfile;
 	int extrabytes;
@@ -49,7 +51,7 @@ void drawbmp(char * filename, unsigned char* pixelArray)
 	headers[11] = 0;                    // biClrUsed
 	headers[12] = 0;                    // biClrImportant
 
-	outfile = fopen(filename, "wb");
+	outfile = fopen(filename.c_str(), "wb");
 
 	//
 	// Headers begin...
@@ -117,7 +119,7 @@ void drawbmp(char * filename, unsigned char* pixelArray)
 	return;
 }
 
-//https://en.wikipedia.org/wiki/BMP_file_format#Bitmap_file_header
+
 
 int main()
 {
@@ -129,7 +131,11 @@ int main()
 
 	const float t0 = 0;
 	const float t1 = 1;
-	for (float t = 0.0f; t < 1.f; t += 0.001f)
+#pragma region  toasm
+	cout<<"size of pointer"<<sizeof(int*)<<endl;
+	cout<<func(pointsX, pointsY, pixelArray, WIDTH, HEIGHT)<<endl;
+	//params: float* pointsX, float* pointsY, unsigned char* pixelArray, width, height 
+	/*for (float t = 0.0f; t < 1.f; t += 0.01f)
 	{
 		__m128 x1 = _mm_load_ps(pointsX);
 		__m128 y1 = _mm_load_ps(pointsY);
@@ -140,18 +146,12 @@ int main()
 
 		for (int j = 1; j < CTRL_POINTS; j++)
 		{
-			__m128 x1u = _mm_mul_ps(x1, uv); //u*cpointsX[i]
-			__m128 x1u1 = _mm_mul_ps(x1, uv1);
-			 //shift x1u1 by one float to the left (1-U)
-			__m128 x1u1s = _mm_cvtepi32_ps(_mm_srli_si128(_mm_cvtps_epi32(x1u), 4));//convert float to int, shift, convert back
-			x1 = _mm_add_ps(x1u1, x1u1s);
+			//convert float to int, shift, convert back
+			x1 = _mm_add_ps(_mm_mul_ps(x1, uv1), _mm_cvtepi32_ps(_mm_srli_si128(_mm_cvtps_epi32(_mm_mul_ps(x1, uv)), 4)));
 
 			//same for ys
-			__m128 y1u = _mm_mul_ps(y1, uv); //u*cpointsX[i]
-			__m128 y1u1 = _mm_mul_ps(y1, uv1);
 			//shift y1u1 by one float to the left (1-U)
-			__m128 y1u1s = _mm_cvtepi32_ps(_mm_srli_si128(_mm_cvtps_epi32(y1u), 4));//convert float to int, shift, convert back
-			y1 = _mm_add_ps(y1u1, y1u1s);
+			y1 = _mm_add_ps(_mm_mul_ps(y1, uv1), _mm_cvtepi32_ps(_mm_srli_si128(_mm_cvtps_epi32(_mm_mul_ps(y1, uv)), 4)));
 		}
 
 		float  x, y;
@@ -160,6 +160,10 @@ int main()
 
 		pixelArray[(int)y*(3 * WIDTH + OFFSET) + (int)x] = 250;
 	}
+	*/
+	//end of nasm
+#pragma endregion
+
 #ifdef DEBUG
 	for (int i = 0; i < CTRL_POINTS; i++)
 	{
