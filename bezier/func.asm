@@ -48,7 +48,7 @@ interpolate:
 	movaps xmm0, [rdi] ;load points x and y to the xmms
 	movaps xmm1, [rsi]
 	fst qword[inter_iter]	;store progress from fpu to mem
-load1:;loading works
+
 	;load inter_iter as u to xmm2
 	;ebx -> u
 	mov ebx, [inter_iter]
@@ -57,9 +57,9 @@ load1:;loading works
 	mov dword [u+8], ebx
 	mov dword [u+12], ebx
 	movups xmm2, [u]
-;	mov eax, ebx;
+	
+	;we have the data, hardcore sse calcs go here
 
-load2:;loading works
 	;prepare u1
 	sub ebx, 1	;u-1
 	neg ebx 	;-(u-1)= 1-u  
@@ -69,6 +69,7 @@ load2:;loading works
 	mov dword [u1+12], ebx
 	movups xmm3, [u1]
 
+	
 	;on the stack: inter_iter, calculate u
 ;	fld qword [inter_iter] ;another inter_iter st1
 ;	fld qword [step_end]	;1.0 st2
