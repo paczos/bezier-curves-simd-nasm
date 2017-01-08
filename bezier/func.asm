@@ -133,7 +133,7 @@ after_conv:
 
 finaladd:
 	addps xmm5, xmm6
-	addss xmm9, xmm10
+	addss xmm8, xmm10
 	jmp interpolate
 end_interpolate:
 
