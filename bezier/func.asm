@@ -9,9 +9,9 @@
 
 
 section .data
-	step_start: dd 0.0
-	step_end: dd 1.0
-	step: dd 0.5
+	step_start: dq 0.0
+	step_end: dq 1.0
+	step: dq 0.5
 	u: dd 0, 0, 0, 0 ; aligned
 	u1: dd 0, 0, 0, 0	;aligned
 
@@ -36,9 +36,9 @@ func:
 	mov eax, 0
 
 
-	fld dword [inter_iter]	;load inter_iter to st0
+	fld qword [inter_iter]	;load inter_iter to st0
 interpolate:
-	fld dword [step_end]	; load step_end to st0, inter_iter in st1
+	fld qword [step_end]	; load step_end to st0, inter_iter in st1
 	fcomp			;compare inter_iter st1  with step_end s0 and pop step_end
 	jl end_interpolate	;end of interpolation
 
@@ -46,7 +46,7 @@ interpolate:
 	movaps xmm0, [rdi] ;load points x and y to the xmms
 	movaps xmm1, [rsi]
 store_iter:
-	fstp dword [inter_iter]	;store progress from fpu to mem
+	fstp qword [inter_iter]	;store progress from fpu to mem
 	
 
 	;load inter_iter as u to xmm2
@@ -61,11 +61,11 @@ store_iter:
 	
 	;fpu should be empty here
 load:	
-	fld dword [step_end];push 1.0 to the fpu
-	fld dword [inter_iter];push iter to the fpu
+	fld qword [step_end];push 1.0 to the fpu
+	fld qword [inter_iter];push iter to the fpu
 
 	fsubp st1, st0
-	fstp dword [sires];store at sires 1-u
+	fstp qword [sires];store at sires 1-u
 	
 loast:
 	
@@ -112,7 +112,7 @@ castelj:
 	jmp castelj
 end_castelj:
 
-	mov eax, 0 ;reset eax after loop
+	mov rax, 0 ;reset eax after loop
 	;extract x,y and store value in pixarray
 	cvtps2dq xmm0, xmm0
 	cvtps2dq xmm1, xmm1
@@ -130,16 +130,16 @@ end_castelj:
 	imul rbx, rcx
 	add rbx, rax
 	add rbx, rdx
-	mov qword[rbx], 250
+;	mov qword[rbx], 250;seg fault
 
-	pextrw rax, xmm0, 0
+	;pextrw rax, xmm0, 0
 
 	;ddmo eax, dword [u]
 	;store results in pixarray
 
 
 finaladd:
-	fld dword [step]
+	fld qword [step]
 	faddp st1, st0;increase inter_iter
 	jmp interpolate
 end_interpolate:
