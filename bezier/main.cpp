@@ -133,38 +133,9 @@ int main()
 	const float t1 = 1;
 	
 #pragma region  toasm
-//	cout<<"size of pointer"<<sizeof(int*)<<endl;
+
 	cout<<func(pointsX, pointsY, pixelArray, WIDTH, HEIGHT)<<endl;
-	//params: float* pointsX, float* pointsY, unsigned char* pixelArray, width, height 
-	/*for (float t = 0.0f; t < 1.f; t += 0.01f)
-	{
-		__m128 x1 = _mm_load_ps(pointsX);
-		__m128 y1 = _mm_load_ps(pointsY);
 
-
-const float u = (t - t0) / (t1 - t0);	//normalized progress
-		__m128 uv = _mm_set1_ps(u);
-		__m128 uv1 = _mm_set1_ps(1-u);
-
-		for (int j = 1; j < CTRL_POINTS; j++)
-		{
-			//convert float to int, shift, convert back
-			x1 = _mm_add_ps(_mm_mul_ps(x1, uv1), _mm_cvtepi32_ps(_mm_srli_si128(_mm_cvtps_epi32(_mm_mul_ps(x1, uv)), 4)));
-
-			//same for ys
-			//shift y1u1 by one float to the left (1-U)
-			y1 = _mm_add_ps(_mm_mul_ps(y1, uv1), _mm_cvtepi32_ps(_mm_srli_si128(_mm_cvtps_epi32(_mm_mul_ps(y1, uv)), 4)));
-		}
-
-		float  x, y;
-		_MM_EXTRACT_FLOAT(x, x1, 0);
-		_MM_EXTRACT_FLOAT(y, y1, 0);
-
-		pixelArray[(int)y*(3 * WIDTH + OFFSET) + (int)x] = 250;
-	}
-	*/
-	//end of nasm
-#pragma endregion
 
 #ifdef DEBUG
 	for (int i = 0; i < CTRL_POINTS; i++)

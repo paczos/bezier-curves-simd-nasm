@@ -9,15 +9,15 @@
 
 
 section .data
-	step_start: dq 0.0
-	step_end: dq 1.0
-	step: dq 0.01
-	u: dq 0, 0, 0, 0 ; aligned
-	u1: dq 0, 0, 0, 0	;aligned
+	step_start: dd 0.0
+	step_end: dd 1.0
+	step: dd 0.5
+	u: dd 0, 0, 0, 0 ; aligned
+	u1: dd 0, 0, 0, 0	;aligned
 
 section .bss
-	inter_iter: resq 1
-	sires: resq 1
+	inter_iter: resw 1
+	sires: resw 1
 
 section	.text
 global func 
@@ -36,18 +36,18 @@ func:
 	mov eax, 0
 
 
-	fld qword [inter_iter]	;load inter_iter to st0
-	;fld qword [step_end]	load step_end  to st1
-	;fld qword [step]	;load step to st2
+	fld dword [inter_iter]	;load inter_iter to st0
 interpolate:
-	fld qword [step_end]	; load step_end to st1
-	fcomip st0, st1		;compare
-	jbe end_interpolate	;end of interpolation
+	fld dword [step_end]	; load step_end to st0, inter_iter in st1
+	fcomp			;compare inter_iter st1  with step_end s0 and pop step_end
+	jl end_interpolate	;end of interpolation
 
 	;add eax, 1 ;loop test
 	movaps xmm0, [rdi] ;load points x and y to the xmms
 	movaps xmm1, [rsi]
-	fst qword[inter_iter]	;store progress from fpu to mem
+store_iter:
+	fstp dword [inter_iter]	;store progress from fpu to mem
+	
 
 	;load inter_iter as u to xmm2
 	;ebx -> u
@@ -58,17 +58,21 @@ interpolate:
 	mov dword [u+12], ebx
 	movups xmm2, [u]
 	
-	fstp(st0)
-	fld qword [step_end];push 1.0 to the fpu
-	fld qword [inter_iter];push iter to the fpu
-	fsub st0, st1
-	fstp(st1)
-	fst qword [sires]
-	fstp (st0)
-	fst qword[inter_iter]
+	
+	;fpu should be empty here
+load:	
+	fld dword [step_end];push 1.0 to the fpu
+	fld dword [inter_iter];push iter to the fpu
 
-	 mov ebx, [sires]
-	 mov eax, ebx
+	fsubp st1, st0
+	fstp dword [sires];store at sires 1-u
+	
+loast:
+	
+	fld qword[inter_iter] ;reload interiter to fpu ;this shit corrupts mem
+	
+	mov ebx, [sires]
+	; mov eax, ebx
 	;prepare u1
 	mov dword [u1], ebx
 	mov dword [u1+4], ebx
@@ -105,6 +109,7 @@ castelj:
 	addps xmm1, xmm4
 
 	add ebx, 1
+	jmp castelj
 end_castelj:
 
 	mov eax, 0 ;reset eax after loop
@@ -133,17 +138,16 @@ end_castelj:
 	;store results in pixarray
 
 
-
-	fld qword [step]
-	fadd st0, st1;increase inter_iter
-	fstp (st1)
+finaladd:
+	fld dword [step]
+	faddp st1, st0;increase inter_iter
 	jmp interpolate
 end_interpolate:
 
 	
 
 	 
-
+	mov eax, [step_end]
 
 
 
