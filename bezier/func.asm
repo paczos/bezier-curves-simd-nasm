@@ -107,28 +107,30 @@ castelj:
 	add ebx, 1
 end_castelj:
 
-mov eax, 0 ;reset eax after loop
-;extract x,y and store value in pixarray
-cvtps2dq xmm0, xmm0
-cvtps2dq xmm1, xmm1
+	mov eax, 0 ;reset eax after loop
+	;extract x,y and store value in pixarray
+	cvtps2dq xmm0, xmm0
+	cvtps2dq xmm1, xmm1
 
-;movdqa [u], xmm0 ;x goes to u
-;movdqa [u1], xmm1;y goest to u1
+	;movdqa [u], xmm0 ;x goes to u
+	;movdqa [u1], xmm1;y goest to u1
 
-pextrw rax, xmm0, 0 ;x
-pextrw rbx, xmm1, 0 ;y
+	pextrw rax, xmm0, 0 ;x
+	pextrw rbx, xmm1, 0 ;y
 
-mov qword[u+4], rdi
-mov rdi, 3
-imul rbx, rdi
-mov rdi, qword[u+4]
-imul rbx, rcx
-add rbx, rax
-add rbx, rdx
-mov qword[rbx], 250
+	mov qword[u+4], rdi
+	mov rdi, 3
+	imul rbx, rdi
+	mov rdi, qword[u+4]
+	imul rbx, rcx
+	add rbx, rax
+	add rbx, rdx
+	mov qword[rbx], 250
 
-;mov eax, dword [u]
-;store results in pixarray
+	pextrw rax, xmm0, 0
+
+	;ddmo eax, dword [u]
+	;store results in pixarray
 
 
 
