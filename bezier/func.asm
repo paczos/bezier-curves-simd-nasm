@@ -17,7 +17,7 @@ section .data
 
 section .bss
 	inter_iter: resq 1
-
+	sires: resq 1
 
 section	.text
 global func 
@@ -58,24 +58,79 @@ interpolate:
 	mov dword [u+12], ebx
 	movups xmm2, [u]
 	
-	;we have the data, hardcore sse calcs go here
+	fstp(st0)
+	fld qword [step_end];push 1.0 to the fpu
+	fld qword [inter_iter];push iter to the fpu
+	fsub st0, st1
+	fstp(st1)
+	fst qword [sires]
+	fstp (st0)
+	fst qword[inter_iter]
 
+	 mov ebx, [sires]
+	 mov eax, ebx
 	;prepare u1
-	sub ebx, 1	;u-1
-	neg ebx 	;-(u-1)= 1-u  
 	mov dword [u1], ebx
 	mov dword [u1+4], ebx
 	mov dword [u1+8], ebx
 	mov dword [u1+12], ebx
 	movups xmm3, [u1]
 
-	
-	;on the stack: inter_iter, calculate u
-;	fld qword [inter_iter] ;another inter_iter st1
-;	fld qword [step_end]	;1.0 st2
 
-	mov eax, [inter_iter]
+;ebx -> loop counter
+;eax -> points num
+	mov ebx, 1
+	mov eax, 4 ;everything is calculated for 4 points
+castelj:
+	cmp ebx, eax
+	jg end_castelj
+
+	;we have the data, hardcore sse calcs go here
+	movdqa xmm4, xmm0;copy contents of xmm0 to xmm4 for later
+	mulps xmm0, xmm2 ;x1*u
+	cvtps2dq xmm0, xmm0
+	psrldq xmm0, 4;srli_si128
+	cvtdq2ps xmm0, xmm0;_mm_cvtepi32_ps
+	mulps xmm4, xmm3
+	addps xmm0, xmm4
 	
+	;do the same for ys
+
+	movdqa xmm4, xmm1
+	mulps xmm1, xmm2 ;x1*u
+	cvtps2dq xmm1, xmm1
+	psrldq xmm1, 4;srli_si128
+	cvtdq2ps xmm1, xmm1;_mm_cvtepi32_ps
+	mulps xmm4, xmm3
+	addps xmm1, xmm4
+
+	add ebx, 1
+end_castelj:
+
+mov eax, 0 ;reset eax after loop
+;extract x,y and store value in pixarray
+cvtps2dq xmm0, xmm0
+cvtps2dq xmm1, xmm1
+
+;movdqa [u], xmm0 ;x goes to u
+;movdqa [u1], xmm1;y goest to u1
+
+pextrw rax, xmm0, 0 ;x
+pextrw rbx, xmm1, 0 ;y
+
+mov qword[u+4], rdi
+mov rdi, 3
+imul rbx, rdi
+mov rdi, qword[u+4]
+imul rbx, rcx
+add rbx, rax
+add rbx, rdx
+mov qword[rbx], 250
+
+;mov eax, dword [u]
+;store results in pixarray
+
+
 
 	fld qword [step]
 	fadd st0, st1;increase inter_iter
