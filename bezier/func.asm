@@ -57,7 +57,7 @@ after_check:
 	movaps xmm0, [rdi] ;load points x and y to the xmms
 	movaps xmm1, [rsi]
 store_iter:
-	fstp qword [inter_iter]	;store progress from fpu to mem
+	;fstp qword [inter_iter]	;store progress from fpu to mem
 	
 
 	;load inter_iter as u to xmm2
@@ -76,21 +76,21 @@ store_iter:
 	mov eax, 4 ;everything is calculated for 4 points
 castelj:
 	cmp ebx, eax
-	jg end_castelj
+	jge end_castelj
 
 	;we have the data, hardcore sse calcs go here
-	movdqa xmm4, xmm0;copy contents of xmm0 to xmm4 for later
-	mulps xmm0, xmm5 ;x1*u
-	cvtps2dq xmm0, xmm0
-	psrldq xmm0, 4;srli_si128
-	cvtdq2ps xmm0, xmm0;_mm_cvtepi32_ps
-	mulps xmm4, xmm2
-	addps xmm0, xmm4
+	movdqa xmm4, xmm0	;copy contents of xmm0 to xmm4 for later
+	mulps xmm0, xmm5 	;x1*u
+	cvtps2dq xmm0, xmm0	;convert xmm0 to int
+	psrldq xmm0, 4	;srli_si128 shift 4 places to left 
+	cvtdq2ps xmm0, xmm0	;_mm_cvtepi32_ps convert to float
+	mulps xmm4, xmm2	;mult x*u1  
+	addps xmm0, xmm4	;x*u + 
 	
 	;do the same for ys
 
 	movdqa xmm4, xmm1
-	mulps xmm1, xmm5 ;x1*u
+	mulps xmm1, xmm5 ;y1*u
 	cvtps2dq xmm1, xmm1
 	psrldq xmm1, 4;srli_si128
 	cvtdq2ps xmm1, xmm1;_mm_cvtepi32_ps
@@ -110,26 +110,30 @@ end_castelj:
 	;movdqa [u1], xmm1;y goest to u1
 
 before_conv:
-	pextrw eax, xmm0, 0 ;x
-	pextrw ebx, xmm1, 0 ;y
+	pextrw rax, xmm0, 0 ;x
+	pextrw rbx, xmm1, 0 ;y
 
 after_conv:
-	mov qword[u+4], rdi
+	;rax x
+	;rbx y
+	;rdi pointsx	
+	;rcx width
+	mov qword[u+4], rdi;store into mem as we need this reg now
 	mov rdi, 3
-	imul rbx, rdi
-	mov rdi, qword[u+4]
-	imul rbx, rcx
-	add rbx, rax
-	add rbx, rdx
+	imul rbx, rdi	;3*y
+	mov rdi, qword[u+4]	;restore points x into rdi
+	imul rbx, rcx	;3*y*width
+	add rbx, rax;	;3*y*width+x
+	add rbx, rdx	;pixarray+3*y*width+x
 
-	mov qword[rbx], 250;seg fault
+	mov qword[rbx], 250
 
 	;pextrw rax, xmm0, 0
 
 	;ddmo eax, dword [u]
 	;store results in pixarray
 
-	add eax, 1
+	;add eax, 1
 
 finaladd:
 	addps xmm5, xmm6
