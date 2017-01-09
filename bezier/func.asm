@@ -11,7 +11,7 @@
 section .data
 	step_start: dd 0.0
 	step_end: dd 1.0
-	step: dd 0.01
+	step: dd 0.1
 	u: dd 0, 0, 0, 0 ; aligned
 	u1: dd 0, 0, 0, 0	;aligned
 
@@ -90,10 +90,10 @@ castelj:
 	;do the same for ys
 
 	movdqa xmm4, xmm1
-	mulps xmm1, xmm5 ;y1*u
+	mulps xmm1, xmm5 	;y1*u
 	cvtps2dq xmm1, xmm1
-	psrldq xmm1, 4;srli_si128
-	cvtdq2ps xmm1, xmm1;_mm_cvtepi32_ps
+	psrldq xmm1, 4		;srli_si128
+	cvtdq2ps xmm1, xmm1	;_mm_cvtepi32_ps
 	mulps xmm4, xmm2
 	addps xmm1, xmm4
 
@@ -120,11 +120,17 @@ after_conv:
 	;rcx width
 	mov qword[u+4], rdi;store into mem as we need this reg now
 	mov rdi, 3
-	imul rbx, rdi	;3*y
+	imul rdi, rcx ;width*3
+	add rdi, 4;offset   width*3+4
+	imul rdi, rbx ;y(width*3+4)
+	mov rbx,rdi ;rbx has y(width*3+4)
+	;imul rbx, rdi	;3*y
 	mov rdi, qword[u+4]	;restore points x into rdi
-	imul rbx, rcx	;3*y*width
-	add rbx, rax;	;3*y*width+x
-	add rbx, rdx	;pixarray+3*y*width+x
+	add rbx, rax	;y(width*3+4)+x
+	add rbx, rdx   ;pixarray+position
+	;imul rbx, rcx	;3*y*width
+	;add rbx, rax;	;3*y*width+x
+	;add rbx, rdx	;pixarray+3*y*width+x
 
 	mov qword[rbx], 250
 
