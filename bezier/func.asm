@@ -11,13 +11,7 @@
 section .data
 	step_start: dd 0.0
 	step_end: dd 1.0
-	step: dd 0.1
-	u: dd 0, 0, 0, 0 ; aligned
-	u1: dd 0, 0, 0, 0	;aligned
-
-section .bss
-	inter_iter: resw 1
-	sires: resw 1
+	step: dd 0.01
 
 section	.text
 global func 
@@ -33,7 +27,18 @@ func:
 	;rdi pointsX
 	;xmm0 pointsX
 	;xmm1 pointsY
-	mov rax, 0
+	
+	
+	push rcx
+	mov r9, rcx
+	add rcx, r9
+	add rcx, r9
+	and rcx, 3
+	mov r9, rcx
+	sub r9, 4
+	neg r9
+	pop rcx
+
 	;curr interiter into xmm5
 	;step into xmm6
 	;end into xmm7
@@ -48,17 +53,12 @@ func:
 	movss xmm9, [step_end];for end compare
 	movss xmm10, [step];single step
 interpolate:
-
 	comiss xmm8, xmm9
-after_check:
 	ja end_interpolate	;end of interpolation
 
 	;add eax, 1 ;loop test
 	movaps xmm0, [rdi] ;load points x and y to the xmms
-	movaps xmm1, [rsi]
-store_iter:
-	;fstp qword [inter_iter]	;store progress from fpu to mem
-	
+	movaps xmm1, [rsi]	
 
 	;load inter_iter as u to xmm2
 	;xmm5 u
@@ -67,11 +67,10 @@ store_iter:
 	movss xmm2, [step_end]	;load const 1
 	shufps xmm2, xmm2, 0h 	;broadcast const 1
 	subps xmm2, xmm5	;xmm2 1-u
-
-	;LEGACY xmmm3 u1, xmm2 u	new xmm5 u, xmm2 u1
+	; xmm5 u, xmm2 u1
 
 	;ebx -> loop counter
-	;eax -> points num
+	;eax -> points num (4)
 	mov ebx, 1
 	mov eax, 4 ;everything is calculated for 4 points
 castelj:
@@ -106,26 +105,22 @@ end_castelj:
 	cvtps2dq xmm0, xmm0
 	cvtps2dq xmm1, xmm1
 
-	;movdqa [u], xmm0 ;x goes to u
-	;movdqa [u1], xmm1;y goest to u1
+	pextrw rax, xmm0, 0 ;x extracted as an int
+	pextrw rbx, xmm1, 0 ;y same
 
-before_conv:
-	pextrw rax, xmm0, 0 ;x
-	pextrw rbx, xmm1, 0 ;y
-
-after_conv:
 	;rax x
 	;rbx y
 	;rdi pointsx	
 	;rcx width
-	mov qword[u+4], rdi;store into mem as we need this reg now
+	push rdi;store on stack as we need this reg now
 	mov rdi, 3
 	imul rdi, rcx ;width*3
-	add rdi, 4;offset   width*3+4
+add_offset:
+	add rdi, r9;offset   width*3+4
 	imul rdi, rbx ;y(width*3+4)
 	mov rbx,rdi ;rbx has y(width*3+4)
 	;imul rbx, rdi	;3*y
-	mov rdi, qword[u+4]	;restore points x into rdi
+	pop rdi	;restore points x into rdi
 	add rbx, rax	;y(width*3+4)+x
 	add rbx, rdx   ;pixarray+position
 	;imul rbx, rcx	;3*y*width
@@ -134,29 +129,12 @@ after_conv:
 
 	mov qword[rbx], 250
 
-	;pextrw rax, xmm0, 0
-
-	;ddmo eax, dword [u]
-	;store results in pixarray
-
-	;add eax, 1
-
-finaladd:
 	addps xmm5, xmm6
 	addss xmm8, xmm10
 	jmp interpolate
 end_interpolate:
 
-	
-
-	 
-;	mov eax, [step_end]
-
-
-
-
-
-;mov	eax, 666		;return 0
+	mov rax, 0 ;return 0	
 	mov rsp, rbp
 	pop	rbp
 	ret
